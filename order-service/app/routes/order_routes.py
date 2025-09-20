@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.auth import get_current_user, TokenData
+from app.core.kafka_producer import send_order_created_event
 from app.schemas.order_schema import OrderCreate, OrderResponse
 from app.services.order_service import OrderService
 from app.repositories.order_repository import OrderRepository
@@ -41,7 +42,18 @@ class OrderRoutes:
         db: Session = Depends(get_db),
         current_user: TokenData = Depends(get_current_user),
     ):
-        return self.order_service.create_order(db, current_user.id, order_data)
+        order = self.order_service.create_order(db, current_user.id, order_data)
+
+        send_order_created_event(
+            {
+                "user_id": current_user.id,
+                "email": current_user.email,
+                "phone_number": current_user.phone_number,
+                "order_id": order.id,
+                "message": f"Your order {order.id} has been created!",
+            }
+        )
+        return order
 
     def get_order(
         self,

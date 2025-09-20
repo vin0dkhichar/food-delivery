@@ -12,5 +12,8 @@ class Settings:
         os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES") or 60
     )
 
+    KAFKA_BROKER: str = os.getenv("KAFKA_BROKER", "localhost:9092")
+    KAFKA_TOPIC_ORDERS: str = os.getenv("KAFKA_TOPIC_ORDERS", "orders")
+
 
 settings = Settings()
