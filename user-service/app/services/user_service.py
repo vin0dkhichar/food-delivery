@@ -41,7 +41,7 @@ class UserService:
             return None
         if not verify_password(password, user.password_hash):
             return None
-        token = create_access_token(subject=str(user.id))
+        token = create_access_token(user)
         return token
 
     def get_user_by_id(self, db: Session, user_id: int) -> Optional[User]:
