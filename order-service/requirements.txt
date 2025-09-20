@@ -11,3 +11,4 @@ email-validator
 python-multipart
 pydantic
 pydantic[email]
+kafka-python
