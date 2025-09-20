@@ -6,7 +6,7 @@ from app.core.database import Base, engine
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="User Service")
+app = FastAPI(title="User Service", root_path="/v1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,4 +19,3 @@ app.add_middleware(
 app.include_router(user_routes.router)
 app.include_router(restaurant_routes.router)
 app.include_router(menu_item_routes.router)
-
