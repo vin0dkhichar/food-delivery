@@ -1,5 +1,6 @@
 from typing import Optional
 from sqlalchemy.orm import Session
+
 from app.schemas.user_schema import UserCreate
 from app.models.user import User
 from app.repositories.user_repository import UserRepository

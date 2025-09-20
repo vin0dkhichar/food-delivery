@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+
 from app.models.restaurant import Restaurant
 from app.schemas.restaurant_schema import RestaurantCreate
 from app.repositories.restaurant_repository import RestaurantRepository

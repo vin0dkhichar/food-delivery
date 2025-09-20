@@ -1,10 +1,12 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+
 from jose import JWTError, jwt
 from pydantic import BaseModel
+
 from app.core.config import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="http://localhost:8001/users/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/users/login")
 
 
 class TokenData(BaseModel):
