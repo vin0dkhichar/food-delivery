@@ -1,5 +1,10 @@
+from .registry import NotificationRegistry
+
+
 class NotificationService:
+    def __init__(self):
+        self.services = NotificationRegistry.all_services()
+
     def notify_order_created(self, data: dict):
-        # Here you can integrate with email/SMS providers
-        print(f"[EMAIL] To: {data['email']}, Message: {data['message']}")
-        print(f"[SMS] To: {data['phone_number']}, Message: {data['message']}")
+        for service in self.services:
+            service.send(data)
