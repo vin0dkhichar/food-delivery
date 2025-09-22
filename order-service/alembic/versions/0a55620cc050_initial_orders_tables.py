@@ -1,8 +1,8 @@
-"""create order table
+"""initial orders tables
 
-Revision ID: 83410e487545
+Revision ID: 0a55620cc050
 Revises: 
-Create Date: 2025-09-17 23:48:07.730398
+Create Date: 2025-09-21 17:16:29.827605
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '83410e487545'
+revision: str = '0a55620cc050'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,8 +25,9 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('restaurant_id', sa.Integer(), nullable=False),
-    sa.Column('status', sa.String(), nullable=True),
+    sa.Column('status', sa.Enum('PENDING', 'PREPARING', 'COMPLETED', 'CANCELED', name='orderstatus'), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_orders_id'), 'orders', ['id'], unique=False)

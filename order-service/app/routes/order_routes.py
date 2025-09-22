@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user, TokenData
 from app.core.kafka_producer import send_order_created_event
-from app.schemas.order_schema import OrderCreate, OrderResponse
+from app.schemas.order_schema import OrderCreate, OrderResponse, OrderStatusUpdate
 from app.services.order_service import OrderService
 from app.repositories.order_repository import OrderRepository
 
@@ -36,6 +36,13 @@ class OrderRoutes:
             methods=["GET"],
         )
 
+        self.router.add_api_route(
+            "/{order_id}/status",
+            self.update_order_status,
+            response_model=OrderResponse,
+            methods=["PUT"],
+        )
+
     def create_order(
         self,
         order_data: OrderCreate,
@@ -44,15 +51,20 @@ class OrderRoutes:
     ):
         order = self.order_service.create_order(db, current_user.id, order_data)
 
-        send_order_created_event(
-            {
-                "user_id": current_user.id,
-                "email": current_user.email,
-                "phone_number": current_user.phone_number,
-                "order_id": order.id,
-                "message": f"Your order {order.id} has been created!",
-            }
+        subject = f"Order Confirmation - #{order.id}"
+        message = (
+            f"Hello {current_user.full_name},\n\n"
+            f"Thank you for your order! Your order with ID #{order.id} has been successfully created.\n"
+            f"We will notify you once it's on the way.\n\n"
+            f"Order Details:\n"
+            f"- Order ID: {order.id}\n"
+            f"- Status: {order.status}\n\n"
+            f"Thank you for shopping with us!\n"
+            f"Best regards,\n"
+            f"The Eat Tree Team"
         )
+
+        self._send_order_email(current_user, order, subject, message)
         return order
 
     def get_order(
@@ -72,3 +84,40 @@ class OrderRoutes:
         current_user: TokenData = Depends(get_current_user),
     ):
         return self.order_service.list_orders(db, current_user.id)
+
+    def update_order_status(
+        self,
+        order_id: int,
+        status_data: OrderStatusUpdate,
+        db: Session = Depends(get_db),
+        current_user: TokenData = Depends(get_current_user),
+    ):
+        order = self.order_service.update_order_status(db, order_id, status_data.status)
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+        subject = f"Order Update - #{order.id}"
+        message = (
+            f"Hello {current_user.full_name},\n\n"
+            f"Your order with ID #{order.id} status has been updated to **{status_data.status.value.upper()}**.\n\n"
+            f"Thank you for shopping with us!\n"
+            f"Best regards,\n"
+            f"The Eat Tree Team"
+        )
+
+        self._send_order_email(current_user, order, subject, message)
+        return order
+
+    def _send_order_email(self, user: TokenData, order, subject: str, message: str):
+        """Common method to send order-related emails via Kafka event"""
+        send_order_created_event(
+            {
+                "user_id": user.id,
+                "name": user.full_name,
+                "email": user.email,
+                "phone_number": user.phone_number,
+                "order_id": order.id,
+                "subject": subject,
+                "message": message,
+            }
+        )

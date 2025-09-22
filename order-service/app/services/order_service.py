@@ -1,8 +1,7 @@
+# app/services/order_service.py
 from sqlalchemy.orm import Session
-
 from typing import List, Optional
-
-from app.models.order import Order, OrderItem
+from app.models.order import Order, OrderItem, OrderStatus
 from app.schemas.order_schema import OrderCreate
 from app.repositories.order_repository import OrderRepository
 
@@ -37,3 +36,14 @@ class OrderService:
 
     def list_orders(self, db: Session, user_id: int) -> List[Order]:
         return self.repository.list_orders_by_user(db, user_id)
+
+    def update_order_status(
+        self, db: Session, order_id: int, status: OrderStatus
+    ) -> Optional[Order]:
+        order = self.repository.get_order(db, order_id)
+        if not order:
+            return None
+        order.status = status
+        db.commit()
+        db.refresh(order)
+        return order

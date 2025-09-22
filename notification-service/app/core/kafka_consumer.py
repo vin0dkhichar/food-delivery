@@ -1,7 +1,10 @@
-from kafka import KafkaConsumer
 import json
+from kafka import KafkaConsumer
+
 from app.services.notification_service import NotificationService
 from app.core.config import settings
+from app.core.logger import logger
+
 
 consumer = KafkaConsumer(
     settings.KAFKA_TOPIC_ORDERS,
@@ -15,5 +18,11 @@ service = NotificationService()
 
 
 def consume_order_events():
+    logger.info("Started consuming Kafka order events...")
     for event_data in consumer:
-        service.notify_order_created(event_data.value)
+        logger.debug(f"Received event: {event_data.value}")
+        try:
+            service.notify_order_created(event_data.value)
+        except Exception as e:
+            logger.error(f"Error processing event {event_data.value}: {e}")
+    logger.info("Stopped consuming Kafka order events.")

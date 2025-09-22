@@ -1,4 +1,5 @@
 from typing import Type
+
 from .base_notification import BaseNotificationService
 
 
