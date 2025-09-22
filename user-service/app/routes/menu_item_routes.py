@@ -8,6 +8,7 @@ from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.restaurant_repository import RestaurantRepository
 from app.core.dependencies import get_current_user
 from app.models.user import User
+from app.core.logger import logger
 
 
 class MenuItemRoutes:
@@ -46,18 +47,33 @@ class MenuItemRoutes:
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user),
     ):
+        logger.info(
+            "Start create_menu_item restaurant_id=%s by user_id=%s",
+            restaurant_id,
+            current_user.id,
+        )
+
         created = self.menu_item_service.create_menu_item(
             db, restaurant_id, current_user.id, data
         )
         if created is None:
+            logger.error("Restaurant not found id=%s", restaurant_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found"
             )
+
         if created is False:
+            logger.error(
+                "Unauthorized menu item creation user_id=%s for restaurant_id=%s",
+                current_user.id,
+                restaurant_id,
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized to add items",
             )
+
+        logger.info("Menu item created id=%s", created.id)
         return created
 
     def get_menu_item(
@@ -65,11 +81,16 @@ class MenuItemRoutes:
         item_id: int,
         db: Session = Depends(get_db),
     ):
+        logger.info("Start get_menu_item id=%s", item_id)
+
         item = self.menu_item_service.get_menu_item_by_id(db, item_id)
         if not item:
+            logger.error("Menu item not found id=%s", item_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Menu item not found"
             )
+
+        logger.info("Returning menu item id=%s", item_id)
         return item
 
     def list_menu_items(

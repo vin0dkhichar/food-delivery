@@ -1,5 +1,6 @@
 from kafka import KafkaProducer
 import json
+
 from app.core.config import settings
 
 producer = KafkaProducer(

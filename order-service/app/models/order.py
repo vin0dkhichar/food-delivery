@@ -8,9 +8,11 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from app.core.database import Base
 import enum
- 
+
+
+from app.core.database import Base
+
 
 class OrderStatus(str, enum.Enum):
     PENDING = "pending"
