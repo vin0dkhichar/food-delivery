@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List
 from pydantic import BaseModel
+from app.models.order import OrderStatus
 
 
 class OrderItemCreate(BaseModel):
@@ -12,6 +13,10 @@ class OrderItemCreate(BaseModel):
 class OrderCreate(BaseModel):
     restaurant_id: int
     items: List[OrderItemCreate]
+
+
+class OrderStatusUpdate(BaseModel):
+    status: OrderStatus
 
 
 class OrderItemResponse(BaseModel):
@@ -28,8 +33,9 @@ class OrderResponse(BaseModel):
     id: int
     user_id: int
     restaurant_id: int
-    status: str
+    status: OrderStatus
     created_at: datetime
+    updated_at: datetime
     items: List[OrderItemResponse]
 
     class Config:

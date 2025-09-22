@@ -1,9 +1,22 @@
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, Float, String
+from sqlalchemy import (
+    Column,
+    Integer,
+    ForeignKey,
+    DateTime,
+    Float,
+    Enum as SQLEnum,
+)
 from sqlalchemy.orm import relationship
-
 from datetime import datetime
-
 from app.core.database import Base
+import enum
+ 
+
+class OrderStatus(str, enum.Enum):
+    PENDING = "pending"
+    PREPARING = "preparing"
+    COMPLETED = "completed"
+    CANCELED = "canceled"
 
 
 class Order(Base):
@@ -12,8 +25,9 @@ class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, index=True, nullable=False)
     restaurant_id = Column(Integer, nullable=False)
-    status = Column(String, default="pending")
+    status = Column(SQLEnum(OrderStatus), default=OrderStatus.PENDING)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     items = relationship("OrderItem", back_populates="order", cascade="all, delete")
 

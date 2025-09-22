@@ -1,7 +1,9 @@
 from mailersend import MailerSendClient, EmailBuilder
+
 from app.core.config import settings
 from .base_notification import BaseNotificationService
 from .registry import NotificationRegistry
+from app.core.logger import logger
 
 
 class MailerSendEmailService(BaseNotificationService):
@@ -11,24 +13,32 @@ class MailerSendEmailService(BaseNotificationService):
         self.mailer = MailerSendClient(api_key=self.api_key)
 
     def send(self, data: dict):
+        recipient_name = data.get("name")
         recipient_email = data.get("email")
+        subject = data.get("subject")
+        message = data.get("message")
+
         # recipient_email = "vinodkhichartechno@gmail.com"
 
-        recipient_name = data.get("name")
+        if not recipient_email or not message:
+            logger.warning(f"[EMAIL] Missing recipient or message: {data}")
+            return
+
+        logger.debug(f"[EMAIL] Sending to {recipient_email}: {message}")
         email = (
             EmailBuilder()
             .from_email(self.from_email["email"], self.from_email["name"])
             .to_many([{"email": recipient_email, "name": recipient_name}])
-            .subject("Notification")
-            .html(f"<p>{data.get('message', '')}</p>")
-            .text(data.get("message", ""))
+            .subject(subject)
+            .text(message)
             .build()
         )
 
         try:
-            response = self.mailer.emails.send(email)
+            self.mailer.emails.send(email)
+            logger.info(f"[EMAIL] Sent successfully to {recipient_email}")
         except Exception as e:
-            print(f"[EMAIL] Failed to send email: {e}")
+            logger.error(f"[EMAIL] Failed to send to {recipient_email}: {e}")
 
 
 NotificationRegistry.register("email", MailerSendEmailService)

@@ -10,7 +10,11 @@ class Settings:
     GROUP_ID: str = "notification_service"
 
     MAILERSEND_API_KEY: str = os.getenv("MAILERSEND_API_KEY")
-    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "no-reply@example.com")
+    EMAIL_FROM: str = os.getenv("EMAIL_FROM")
+
+    TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID")
+    TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN")
+    TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER")
 
 
 settings = Settings()
