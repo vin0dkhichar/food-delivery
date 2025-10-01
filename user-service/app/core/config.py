@@ -12,5 +12,9 @@ class Settings:
         os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES") or 60
     )
 
+    ELASTICSEARCH_URL: str = os.getenv("ELASTICSEARCH_URL", "https://localhost:9200")
+    ELASTICSEARCH_USER: str = os.getenv("ELASTICSEARCH_USER", "elastic")
+    ELASTICSEARCH_PASSWORD: str = os.getenv("ELASTICSEARCH_PASSWORD", "")
+
 
 settings = Settings()
