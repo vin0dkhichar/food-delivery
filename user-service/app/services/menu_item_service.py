@@ -1,53 +1,55 @@
 from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
 
 from app.models.menu_item import MenuItem
+from app.models.restaurant import Restaurant
+from app.models.user import User
 from app.schemas.menu_item_schema import MenuItemCreate
-from app.repositories.menu_item_repository import MenuItemRepository
-from app.repositories.restaurant_repository import RestaurantRepository
-from app.core.logger import logger
 
 
 class MenuItemService:
-    def __init__(
-        self, repository: MenuItemRepository, restaurant_repo: RestaurantRepository
-    ):
-        self.repository = repository
-        self.restaurant_repo = restaurant_repo
+    def __init__(self, db: Session):
+        self.db = db
 
-    def create_menu_item(
-        self, db: Session, restaurant_id: int, owner_id: int, data: MenuItemCreate
-    ) -> MenuItem:
-        logger.info("Start create_menu_item for restaurant_id=%s", restaurant_id)
-
-        restaurant = self.restaurant_repo.get_restaurant_by_id(db, restaurant_id)
-
+    def create_menu_item(self, data: MenuItemCreate, current_user: User) -> MenuItem:
+        restaurant = (
+            self.db.query(Restaurant)
+            .filter(Restaurant.id == data.restaurant_id)
+            .first()
+        )
         if not restaurant:
-            logger.error("Restaurant not found: id=%s", restaurant_id)
-            return None
-
-        if restaurant.owner_id != owner_id:
-            logger.error(
-                "Unauthorized attempt by user_id=%s for restaurant_id=%s",
-                owner_id,
-                restaurant_id,
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found"
             )
-            return False
 
-        new_item = MenuItem(
+        if restaurant.owner_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not allowed to add menu items to this restaurant",
+            )
+
+        menu_item = MenuItem(
             name=data.name,
             description=data.description,
             price=data.price,
             is_available=data.is_available,
-            restaurant_id=restaurant_id,
+            category=data.category,
+            cuisine_type=data.cuisine_type,
+            tags=data.tags or [],
+            restaurant_id=data.restaurant_id,
+            image_id=data.image_id if data.image_id else None,
         )
+        self.db.add(menu_item)
+        self.db.commit()
+        self.db.refresh(menu_item)
+        return menu_item
 
-        created_item = self.repository.create_menu_item(db, new_item)
+    def get_menu_item_by_id(self, item_id: int):
+        return self.db.query(MenuItem).filter(MenuItem.id == item_id).first()
 
-        logger.info("Menu item created with id=%s", created_item.id)
-        return created_item
-
-    def get_menu_item_by_id(self, db: Session, item_id: int):
-        return self.repository.get_menu_item_by_id(db, item_id)
-
-    def get_menu_items_by_restaurant(self, db: Session, restaurant_id: int):
-        return self.repository.get_menu_items_by_restaurant(db, restaurant_id)
+    def get_menu_items_by_restaurant(self, restaurant_id: int):
+        return (
+            self.db.query(MenuItem)
+            .filter(MenuItem.restaurant_id == restaurant_id)
+            .all()
+        )

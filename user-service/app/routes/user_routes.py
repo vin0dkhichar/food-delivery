@@ -32,8 +32,8 @@ class UserRoutes:
         )
 
         self.router.add_api_route(
-            "/{user_id}",
-            self.get_user,
+            "/me",
+            self.get_current_user,
             response_model=UserResponse,
             methods=["GET"],
         )
@@ -63,24 +63,9 @@ class UserRoutes:
         logger.debug("Login success username=%s", form_data.username)
         return {"access_token": token, "token_type": "bearer"}
 
-    def get_user(
+    def get_current_user(
         self,
-        user_id: int,
-        db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user),
     ):
-        logger.info("Start get_user id=%s", user_id)
-
-        if current_user.id != user_id:
-            logger.error(
-                "Unauthorized access attempt by user_id=%s to user_id=%s",
-                current_user.id,
-                user_id,
-            )
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this user",
-            )
-
-        logger.debug("Returning user id=%s", user_id)
+        logger.info("Fetching current user id=%s", current_user.id)
         return current_user

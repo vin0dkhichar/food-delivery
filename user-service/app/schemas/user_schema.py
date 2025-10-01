@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 from app.models.user import UserRole
@@ -11,6 +10,9 @@ class UserCreate(BaseModel):
     phone_number: Optional[str] = None
     address: Optional[str] = None
     role: UserRole = UserRole.CUSTOMER
+    delivery_radius_km: Optional[int] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 
 class UserLogin(BaseModel):
@@ -24,9 +26,10 @@ class UserResponse(BaseModel):
     full_name: str
     phone_number: Optional[str] = None
     address: Optional[str] = None
-    role: UserRole
-    is_active: bool
-    created_at: datetime
+    role: UserRole    
+    delivery_radius_km: Optional[int] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
     class Config:
         from_attributes = True

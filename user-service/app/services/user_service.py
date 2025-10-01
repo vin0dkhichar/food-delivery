@@ -37,6 +37,9 @@ class UserService:
             address=user_data.address,
             role=user_data.role,
             is_active=True,
+            delivery_radius_km=user_data.delivery_radius_km,
+            latitude=user_data.latitude,
+            longitude=user_data.longitude,
         )
 
         created_user = self.repository.create_user(db, new_user)
@@ -47,9 +50,6 @@ class UserService:
     def authenticate_user(
         self, db: Session, username: str, password: str
     ) -> Optional[str]:
-        """
-        Returns a JWT access token (string) on success, or None on failure.
-        """
         logger.info("Start authenticate_user for username=%s", username)
 
         user = self.repository.get_user_by_email(db, username)

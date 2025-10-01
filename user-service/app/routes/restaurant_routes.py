@@ -8,6 +8,7 @@ from app.repositories.restaurant_repository import RestaurantRepository
 from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.core.logger import logger
+from app.core.role_decorator import require_role
 
 
 class RestaurantRoutes:
@@ -37,6 +38,7 @@ class RestaurantRoutes:
             methods=["GET"],
         )
 
+    @require_role(["restaurant", "admin"])
     def create_restaurant(
         self,
         data: RestaurantCreate,
@@ -44,15 +46,6 @@ class RestaurantRoutes:
         current_user: User = Depends(get_current_user),
     ):
         logger.info("Start create_restaurant by user_id=%s", current_user.id)
-
-        if current_user.role != "restaurant":
-            logger.error(
-                "Unauthorized restaurant create attempt user_id=%s", current_user.id
-            )
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only restaurant owners can create",
-            )
 
         restaurant = self.restaurant_service.create_restaurant(
             db, current_user.id, data

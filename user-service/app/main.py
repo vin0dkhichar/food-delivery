@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes.user_routes import UserRoutes
 from app.routes.restaurant_routes import RestaurantRoutes
 from app.routes.menu_item_routes import MenuItemRoutes
+from app.routes.file_routes import router as file_router
 
 from app.core.database import Base, engine
 
@@ -26,3 +27,4 @@ menu_item_routes = MenuItemRoutes()
 app.include_router(user_routes.router)
 app.include_router(restaurant_routes.router)
 app.include_router(menu_item_routes.router)
+app.include_router(file_router)

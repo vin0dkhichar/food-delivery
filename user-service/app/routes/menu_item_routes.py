@@ -1,101 +1,55 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 
 from app.core.database import get_db
-from app.schemas.menu_item_schema import MenuItemCreate, MenuItemResponse
+from app.schemas.menu_item_schema import MenuItemResponse, MenuItemCreate
 from app.services.menu_item_service import MenuItemService
-from app.repositories.menu_item_repository import MenuItemRepository
-from app.repositories.restaurant_repository import RestaurantRepository
 from app.core.dependencies import get_current_user
 from app.models.user import User
-from app.core.logger import logger
 
 
 class MenuItemRoutes:
     def __init__(self):
         self.router = APIRouter(prefix="/menu-items", tags=["Menu Items"])
-        self.menu_item_service = MenuItemService(
-            MenuItemRepository(), RestaurantRepository()
-        )
-
         self.router.add_api_route(
-            "/{restaurant_id}",
+            "/",
             self.create_menu_item,
-            response_model=MenuItemResponse,
-            status_code=status.HTTP_201_CREATED,
             methods=["POST"],
+            response_model=MenuItemResponse,
+            status_code=201,
         )
-
         self.router.add_api_route(
             "/{item_id}",
             self.get_menu_item,
-            response_model=MenuItemResponse,
             methods=["GET"],
+            response_model=MenuItemResponse,
         )
-
         self.router.add_api_route(
             "/restaurant/{restaurant_id}",
             self.list_menu_items,
-            response_model=list[MenuItemResponse],
             methods=["GET"],
+            response_model=List[MenuItemResponse],
         )
 
     def create_menu_item(
         self,
-        restaurant_id: int,
         data: MenuItemCreate,
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user),
     ):
-        logger.info(
-            "Start create_menu_item restaurant_id=%s by user_id=%s",
-            restaurant_id,
-            current_user.id,
-        )
+        service = MenuItemService(db)
+        menu_item = service.create_menu_item(data, current_user)
+        return MenuItemResponse.from_orm(menu_item)
 
-        created = self.menu_item_service.create_menu_item(
-            db, restaurant_id, current_user.id, data
-        )
-        if created is None:
-            logger.error("Restaurant not found id=%s", restaurant_id)
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found"
-            )
-
-        if created is False:
-            logger.error(
-                "Unauthorized menu item creation user_id=%s for restaurant_id=%s",
-                current_user.id,
-                restaurant_id,
-            )
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to add items",
-            )
-
-        logger.info("Menu item created id=%s", created.id)
-        return created
-
-    def get_menu_item(
-        self,
-        item_id: int,
-        db: Session = Depends(get_db),
-    ):
-        logger.info("Start get_menu_item id=%s", item_id)
-
-        item = self.menu_item_service.get_menu_item_by_id(db, item_id)
+    def get_menu_item(self, item_id: int, db: Session = Depends(get_db)):
+        service = MenuItemService(db)
+        item = service.get_menu_item_by_id(item_id)
         if not item:
-            logger.error("Menu item not found id=%s", item_id)
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Menu item not found"
-            )
+            raise HTTPException(status_code=404, detail="Menu item not found")
+        return MenuItemResponse.from_orm(item)
 
-        logger.info("Returning menu item id=%s", item_id)
-        return item
-
-    def list_menu_items(
-        self,
-        restaurant_id: int,
-        db: Session = Depends(get_db),
-    ):
-        return self.menu_item_service.get_menu_items_by_restaurant(db, restaurant_id)
+    def list_menu_items(self, restaurant_id: int, db: Session = Depends(get_db)):
+        service = MenuItemService(db)
+        items = service.get_menu_items_by_restaurant(restaurant_id)
+        return [MenuItemResponse.from_orm(item) for item in items]
