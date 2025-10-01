@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from passlib.context import CryptContext
 from jose import jwt, JWTError
@@ -18,17 +18,19 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(user: User, expires_delta: Optional[timedelta] = None) -> str:
-    expire = datetime.utcnow() + (
+    now = datetime.now(timezone.utc)
+    expire = now + (
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
+
     to_encode = {
         "sub": str(user.id),
         "email": user.email,
         "role": user.role.value if hasattr(user.role, "value") else str(user.role),
         "full_name": user.full_name,
         "phone_number": user.phone_number,
-        "iat": datetime.utcnow().timestamp(),
-        "exp": expire,
+        "iat": int(now.timestamp()),
+        "exp": int(expire.timestamp()),
     }
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 

@@ -21,6 +21,11 @@ class RestaurantService:
             address=data.address,
             phone_number=data.phone_number,
             owner_id=owner_id,
+            category=data.category,
+            cuisine_type=data.cuisine_type,
+            tags=data.tags or [],
+            latitude=data.latitude,
+            longitude=data.longitude,
             is_active=True,
         )
 
