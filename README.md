@@ -39,8 +39,6 @@ pip install -r requirements.txt
 python3 -m app.worker
 ```
 
----
-
 ## Nginx Reverse Proxy Setup
 
 We use **Nginx** to expose all services under a single domain.
@@ -96,12 +94,8 @@ sudo nginx -t
 sudo service nginx reload
 ```
 
----
-
 ## API Documentation
 
 * User Service → `http://food.delivery.my/v1/docs`
 * Order Service → `http://food.delivery.my/v1/orders/docs`
 * Health check → `http://food.delivery.my/health`
-
----
