@@ -5,6 +5,7 @@ from app.models.menu_item import MenuItem
 from app.models.restaurant import Restaurant
 from app.models.user import User
 from app.schemas.menu_item_schema import MenuItemCreate
+from app.core.search import index_document
 
 
 class MenuItemService:
@@ -42,6 +43,21 @@ class MenuItemService:
         self.db.add(menu_item)
         self.db.commit()
         self.db.refresh(menu_item)
+
+        index_document(
+            index="menu_items",
+            id=menu_item.id,
+            body={
+                "name": menu_item.name,
+                "description": menu_item.description,
+                "price": menu_item.price,
+                "is_available": menu_item.is_available,
+                "category": menu_item.category,
+                "cuisine_type": menu_item.cuisine_type,
+                "tags": menu_item.tags,
+                "restaurant_id": menu_item.restaurant_id,
+            },
+        )
         return menu_item
 
     def get_menu_item_by_id(self, item_id: int):

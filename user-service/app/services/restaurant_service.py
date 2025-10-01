@@ -4,6 +4,7 @@ from app.models.restaurant import Restaurant
 from app.schemas.restaurant_schema import RestaurantCreate
 from app.repositories.restaurant_repository import RestaurantRepository
 from app.core.logger import logger
+from app.core.search import index_document
 
 
 class RestaurantService:
@@ -30,6 +31,23 @@ class RestaurantService:
         )
 
         created_restaurant = self.repository.create_restaurant(db, new_restaurant)
+
+        index_document(
+            index="restaurants",
+            id=created_restaurant.id,
+            body={
+                "name": created_restaurant.name,
+                "description": created_restaurant.description,
+                "address": created_restaurant.address,
+                "category": created_restaurant.category,
+                "cuisine_type": created_restaurant.cuisine_type,
+                "tags": created_restaurant.tags,
+                "location": {
+                    "lat": created_restaurant.latitude,
+                    "lon": created_restaurant.longitude,
+                },
+            },
+        )
 
         logger.info("Restaurant created with id=%s", created_restaurant.id)
         return created_restaurant

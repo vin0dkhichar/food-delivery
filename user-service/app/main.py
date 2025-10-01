@@ -5,6 +5,8 @@ from app.routes.user_routes import UserRoutes
 from app.routes.restaurant_routes import RestaurantRoutes
 from app.routes.menu_item_routes import MenuItemRoutes
 from app.routes.file_routes import router as file_router
+from app.routes.search_routes import router as search_router
+
 
 from app.core.database import Base, engine
 
@@ -28,3 +30,4 @@ app.include_router(user_routes.router)
 app.include_router(restaurant_routes.router)
 app.include_router(menu_item_routes.router)
 app.include_router(file_router)
+app.include_router(search_router)
